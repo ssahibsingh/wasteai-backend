@@ -1,13 +1,36 @@
-from flask import Flask, jsonify
-import os
+from flask import Flask, request, render_template
+import pandas as pd
+import joblib
+# print(pd.show_versions())
 
+
+# Declare a Flask app
 app = Flask(__name__)
 
+@app.route('/', methods=['GET', 'POST'])
+def main():
+    
+    # If a form is submitted
+    if request.method == "POST":
+        
+        # Unpickle classifier
+        clf = joblib.load("clf.pkl")
+        
+        # Get values through input bars
+        height = request.form.get("height")
+        weight = request.form.get("weight")
+        
+        # Put inputs to dataframe
+        X = pd.DataFrame([[height, weight]], columns = ["Height", "Weight"])
+        
+        # Get prediction
+        prediction = clf.predict(X)[0]
+        
+    else:
+        prediction = ""
+        
+    return render_template("website.html", output = prediction)
 
-@app.route('/')
-def index():
-    return jsonify({"Choo Choo": "Welcome to your Flask app 🚅"})
-
-
+# Running the app
 if __name__ == '__main__':
-    app.run(debug=True, port=os.getenv("PORT", default=5000))
+    app.run(debug = True)
