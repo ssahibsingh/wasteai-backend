@@ -86,6 +86,8 @@ def imgHandler():
     else:
         prediction = ""
         img_path = ""
+        predicted_class=""
+        confidence=""
         
     return render_template("index.html", output = prediction, img_path = img_path, predicted_class = predicted_class, confidence=confidence)
 
