@@ -20,9 +20,9 @@
         <input type="submit" value="Upload" />
     </form>
     <p style="text-align: center;">
-        <img src="{{ img_path }}" alt="">
-        {{ output }}
+        <img src="{{url_for('get_image', image_id=image_id)}}" alt="image">
     </p>
+    <p>{{ output }}</p>
     <ul>
         <li>Prediction: {{ predicted_class }}</li>
         <li>Confidence: {{ confidence }}</li>
