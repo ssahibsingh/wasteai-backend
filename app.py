@@ -23,13 +23,19 @@ app = Flask(__name__)
 # MongoDB Connection
 # client = None
 client = pymongo.MongoClient(os.getenv('MONGODB_URI'))
+print("**********\n",client)
+print("**********\n")
 db = client.get_database('uploaded_image') if client else None 
+print("**********\n",db)
+print("**********\n")
 
 # Model Classes
 class_names = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
 
 # Model Prediction
 def predict(model, img):
+    print("**********\n Predicting")
+    print("**********\n")
     test_img = image_utils.load_img(img, target_size=(256, 256))
     img_arr = image_utils.img_to_array(test_img)
     img_arr = tf.expand_dims(img_arr ,0)
@@ -38,6 +44,8 @@ def predict(model, img):
 
     predicted_class = class_names[np.argmax(prediction[0])]
     confidence = round(100 *(np.max(prediction[0])),2)
+    print("**********\n Predicted Class: ",predicted_class)
+    print("**********\n")
 
     return predicted_class , confidence
 
@@ -58,12 +66,20 @@ def home():
     if request.method == 'GET':
         return jsonify({'status': 'active', 'message': 'Waste AI'}), 200
     elif request.method == 'POST':
+        print("**********\n POST request")
+        print("**********\n")
         image = request.files['image']  # fet input
         image_data = Binary(image.read())
         image_format = imghdr.what(None, h=image_data)
+        print("**********\n",image_data)
+        print("**********\n")
         if db is None:
+            print("**********\n DB not Connected")
+            print("**********\n")
             return jsonify({'success': 'false', 'message': 'DB not Connected'})
         else:
+            print("**********\n DB Connected")
+            print("**********\n")
             alreadyInDB = db.images.find_one({"image": image_data})  # check if image already exists in database
             if alreadyInDB is None:
                 image_id = db.images.insert_one({"image": image_data, "format":image_format}).inserted_id
