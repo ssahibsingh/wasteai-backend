@@ -5,12 +5,13 @@ import pickle
 import os
 import tensorflow as tf
 import joblib
+import imghdr
 from bson.binary import Binary
-from flask import Flask, request, render_template, jsonify, send_file
+from flask import Flask, request, jsonify, send_file
 from flask_pymongo import pymongo
 from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image as image_utils
 from dotenv import load_dotenv
-import imghdr
 from io import BytesIO
 from bson.objectid import ObjectId
 
@@ -20,16 +21,17 @@ load_dotenv()
 app = Flask(__name__)
 
 # MongoDB Connection
+# client = None
 client = pymongo.MongoClient(os.getenv('MONGODB_URI'))
-db = client.get_database('uploaded_image')
+db = client.get_database('uploaded_image') if client else None 
 
 # Model Classes
 class_names = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
 
-
+# Model Prediction
 def predict(model, img):
-    test_img = tf.keras.preprocessing.image.load_img(img, target_size=(256, 256))
-    img_arr = tf.keras.preprocessing.image.img_to_array(test_img)
+    test_img = image_utils.load_img(img, target_size=(256, 256))
+    img_arr = image_utils.img_to_array(test_img)
     img_arr = tf.expand_dims(img_arr ,0)
 
     prediction = model.predict(img_arr)
@@ -39,79 +41,47 @@ def predict(model, img):
 
     return predicted_class , confidence
 
+# Get Image from DB
 @app.route('/image/<image_id>', methods=['GET'])
 def get_image(image_id):
     image = db.images.find_one({"_id": ObjectId(image_id)})
     if image is None:
-        return jsonify({'status': 'error', 'message': 'Image not found'}), 404
+        return jsonify({'message': 'Image not found', 'success':'false'}), 404
     else:
         image_data = image['image']
         image_format = image['format']
         return send_file(BytesIO(image_data), mimetype=('image/'+image_format))
 
-# @app.route('/')
-# def home():
-#     prediction = ""
-#     img_path = ""
-#     predicted_class=""
-#     confidence=""
-#     return render_template('index.html')
-
-
+# Get and Post Request handler
 @app.route('/', methods=['GET','POST'])
 def home():
     if request.method == 'GET':
-        prediction = ""
-        image_id = ""
-        predicted_class=""
-        confidence=""
-        return render_template('index.html', output = prediction, image_id = image_id, predicted_class = predicted_class, confidence = confidence)
-    else:
+        return jsonify({'status': 'active', 'message': 'Waste AI'}), 200
+    elif request.method == 'POST':
         image = request.files['image']  # fet input
         image_data = Binary(image.read())
         image_format = imghdr.what(None, h=image_data)
-        alreadyInDB = db.images.find_one({"image": image_data})  # check if image already exists in database
-        if alreadyInDB is None:
-            image_id = db.images.insert_one({"image": image_data, "format":image_format}).inserted_id
+        if db is None:
+            return jsonify({'success': 'false', 'message': 'DB not Connected'})
         else:
-            image_id = alreadyInDB['_id']
+            alreadyInDB = db.images.find_one({"image": image_data})  # check if image already exists in database
+            if alreadyInDB is None:
+                image_id = db.images.insert_one({"image": image_data, "format":image_format}).inserted_id
+            else:
+                image_id = alreadyInDB['_id']
 
-
-        # print(image_id)
-        # print("\n")
-        # print("*****Binary Image: \n*****")
-        # print(Binary(image_data) == image_data)
-        # filename = file.filename
-        # print("@@ Input posted = ", filename)
-        # file_path = os.path.join('static/uploaded', filename)
-        # file.save(file_path)
-
-        prediction = "Image Uploaded Successfully"
-        # img_path = file_path
-        # img_path1 = 'static/uploaded/'+filename
-        # # # Unpickle classifier
-        # # model = pickle.load(open('vggmodel.pkl', 'rb'))
-        # # model = joblib.load("vggmodel.pkl")
-        # # model = joblib.load("vgg16_model.h5")
         model =load_model("vgg16_model.h5")
-        # img_path = BytesIO(image_data)
         predicted_class , confidence = predict(model, BytesIO(image_data))
-        # print(predicted_class , confidence)
-        # Get values through input bars
-        # height = request.form.get("height")
-        # weight = request.form.get("weight")
+        return jsonify(
+            {
+                'success': 'true',
+                'message': 'Prediction Successful',
+                'prediction': predicted_class,
+                'confidence': confidence,
+                'image_id': str(image_id),
+            }
+        )
         
-        # # Put inputs to dataframe
-        # X = pd.DataFrame([[height, weight]], columns = ["Height", "Weight"])
-        
-        # # Get prediction
-        # prediction = clf.predict(X)[0]
-        # prediction = ""
-        # img_response = ""
-        # predicted_class=""
-        # confidence=""
-        return render_template("index.html", output = prediction, image_id = image_id, predicted_class = predicted_class, confidence=confidence)
-        # return jsonify({'status': 'success', 'image_id': str(image_id)})
 
 # Running the app
 if __name__ == '__main__':
