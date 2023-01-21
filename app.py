@@ -8,6 +8,7 @@ import joblib
 import imghdr
 from bson.binary import Binary
 from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
 from flask_pymongo import pymongo
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image as image_utils
@@ -19,6 +20,7 @@ from bson.objectid import ObjectId
 load_dotenv()
 # Declare a Flask app
 app = Flask(__name__)
+cors = CORS(app,  resources={r"/": {"origins": "http://localhost:3000"}})
 
 # MongoDB Connection
 # client = None
@@ -67,6 +69,10 @@ def home():
         return jsonify({'status': 'active', 'message': 'Waste AI'}), 200
     elif request.method == 'POST':
         print("**********\n POST Request Received")
+        print(request.files['image'])
+        # return jsonify({
+        #     'success': 'true',
+        # })
         image = request.files['image']  # fet input
         image_data = Binary(image.read())
         image_format = imghdr.what(None, h=image_data)
