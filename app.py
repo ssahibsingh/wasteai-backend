@@ -20,7 +20,7 @@ from bson.objectid import ObjectId
 load_dotenv()
 # Declare a Flask app
 app = Flask(__name__)
-cors = CORS(app)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 # MongoDB Connection
 # client = None
