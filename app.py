@@ -24,18 +24,19 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 # MongoDB Connection
 # client = None
-client = pymongo.MongoClient(os.getenv('MONGODB_URI'))
-print("**********\n MongoClient: ",client)
-print("**********\n")
-db = client.get_database('uploaded_image') if client else None 
-print("**********\n Database: ",db)
-print("**********\n")
+# client = pymongo.MongoClient(os.getenv('MONGODB_URI'))
+# print("**********\n MongoClient: ",client)
+# print("**********\n")
+# db = client.get_database('uploaded_image') if client else None 
+# print("**********\n Database: ",db)
+# print("**********\n")
 
-# Model Classes
-class_names = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
 
 # Model Prediction
 def predict(model, img):
+    # Model Classes
+    class_names = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
+
     print("**********\n Predicting.... \n\n")
     test_img = image_utils.load_img(img, target_size=(256, 256))
     img_arr = image_utils.img_to_array(test_img)
@@ -52,15 +53,15 @@ def predict(model, img):
     return predicted_class , confidence
 
 # Get Image from DB
-@app.route('/image/<image_id>', methods=['GET'])
-def get_image(image_id):
-    image = db.images.find_one({"_id": ObjectId(image_id)})
-    if image is None:
-        return jsonify({'message': 'Image not found', 'success':'false'}), 404
-    else:
-        image_data = image['image']
-        image_format = image['format']
-        return send_file(BytesIO(image_data), mimetype=('image/'+image_format))
+# @app.route('/image/<image_id>', methods=['GET'])
+# def get_image(image_id):
+#     image = db.images.find_one({"_id": ObjectId(image_id)})
+#     if image is None:
+#         return jsonify({'message': 'Image not found', 'success':'false'}), 404
+#     else:
+#         image_data = image['image']
+#         image_format = image['format']
+#         return send_file(BytesIO(image_data), mimetype=('image/'+image_format))
 
 # Get and Post Request handler
 @app.route('/', methods=['GET','POST'])
@@ -79,21 +80,22 @@ def home():
         image_format = imghdr.what(None, h=image_data)
         print("\n\n Image Received: ",image_data)
         print("**********\n")
-        if db is None:
-            print("**********\n DB not Connected")
-            print("**********\n")
-            return jsonify({'success': 'false', 'message': 'DB not Connected'})
-        else:
-            print("**********\n DB Connected")
-            alreadyInDB = db.images.find_one({"image": image_data})  # check if image already exists in database
-            if alreadyInDB is None:
-                image_id = db.images.insert_one({"image": image_data, "format":image_format}).inserted_id
-            else:
-                image_id = alreadyInDB['_id']
-            print("Image ID: ",image_id)
-            print("**********\n")
+        # if db is None:
+        #     print("**********\n DB not Connected")
+        #     print("**********\n")
+        #     return jsonify({'success': 'false', 'message': 'DB not Connected'})
+        # else:
+        #     print("**********\n DB Connected")
+        #     alreadyInDB = db.images.find_one({"image": image_data})  # check if image already exists in database
+        #     if alreadyInDB is None:
+        #         image_id = db.images.insert_one({"image": image_data, "format":image_format}).inserted_id
+        #     else:
+        #         image_id = alreadyInDB['_id']
+        #     print("Image ID: ",image_id)
+        #     print("**********\n")
 
-        model =load_model("vgg16_model.h5")
+        # model =load_model("models/vgg16_model.h5")
+        model =load_model("models/resnet50.h5")
         predicted_class , confidence = predict(model, BytesIO(image_data))
         return jsonify(
             {
@@ -101,7 +103,7 @@ def home():
                 'message': 'Prediction Successful',
                 'prediction': predicted_class,
                 'confidence': confidence,
-                'image_id': str(image_id),
+                # 'image_id': str(image_id),
             }
         )
         
