@@ -94,8 +94,8 @@ def home():
         #     print("Image ID: ",image_id)
         #     print("**********\n")
 
-        # model =load_model("models/vgg16_model.h5")
-        model =load_model("models/resnet50.h5")
+        model =load_model("models/vgg16_model.h5")
+        # model =load_model("models/resnet50.h5")
         predicted_class , confidence = predict(model, BytesIO(image_data))
         return jsonify(
             {
