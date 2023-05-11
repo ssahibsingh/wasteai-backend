@@ -78,7 +78,7 @@ def home():
         image = request.files['image']  # fet input
         image_data = Binary(image.read())
         image_format = imghdr.what(None, h=image_data)
-        print("\n\n Image Received: ",image_data)
+        # print("\n\n Image Received: ",image_data)
         print("**********\n")
         # if db is None:
         #     print("**********\n DB not Connected")
