@@ -97,6 +97,8 @@ def home():
         model =load_model("models/vgg16_model.h5")
         # model =load_model("models/resnet50.h5")
         predicted_class , confidence = predict(model, BytesIO(image_data))
+
+        del image, image_data, image_format, model
         return jsonify(
             {
                 'success': 'true',
