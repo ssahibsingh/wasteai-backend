@@ -1,0 +1,85 @@
+# import pandas as pd
+# import PIL
+# import pickle
+# import os
+# import joblib
+# from flask_pymongo import pymongo
+# from dotenv import load_dotenv
+# from bson.objectid import ObjectId
+
+
+
+# load_dotenv()
+
+
+# MongoDB Connection
+# client = None
+# client = pymongo.MongoClient(os.getenv('MONGODB_URI'))
+# print("**********\n MongoClient: ",client)
+# print("**********\n")
+# db = client.get_database('uploaded_image') if client else None 
+# print("**********\n Database: ",db)
+# print("**********\n")
+
+
+
+# Model Prediction
+# @profile
+# def predict(img):
+#     model =load_model("models/vgg16_model.h5")
+#     # Model Classes
+#     class_names = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
+
+#     print("**********\n Predicting.... \n\n")
+#     test_img = image_utils.load_img(img, target_size=(256, 256))
+#     img_arr = image_utils.img_to_array(test_img)
+#     img_arr = tf.expand_dims(img_arr ,0)
+
+#     prediction = model.predict(img_arr)
+
+#     predicted_class = class_names[np.argmax(prediction[0])]
+#     confidence = round(100 *(np.max(prediction[0])),2)
+#     print("Predicted Class: ",predicted_class)
+#     print("Confidence: ",confidence)
+#     print("**********\n")
+
+#     del test_img, img_arr, prediction, model
+#     gc.collect()
+
+#     return predicted_class , confidence
+
+
+
+# Get Image from DB
+# @app.route('/image/<image_id>', methods=['GET'])
+# def get_image(image_id):
+#     image = db.images.find_one({"_id": ObjectId(image_id)})
+#     if image is None:
+#         return jsonify({'message': 'Image not found', 'success':'false'}), 404
+#     else:
+#         image_data = image['image']
+#         image_format = image['format']
+#         return send_file(BytesIO(image_data), mimetype=('image/'+image_format))
+
+
+
+
+# if db is None:
+        #     print("**********\n DB not Connected")
+        #     print("**********\n")
+        #     return jsonify({'success': 'false', 'message': 'DB not Connected'})
+        # else:
+        #     print("**********\n DB Connected")
+        #     alreadyInDB = db.images.find_one({"image": image_data})  # check if image already exists in database
+        #     if alreadyInDB is None:
+        #         image_id = db.images.insert_one({"image": image_data, "format":image_format}).inserted_id
+        #     else:
+        #         image_id = alreadyInDB['_id']
+        #     print("Image ID: ",image_id)
+        #     print("**********\n")
+
+
+
+
+# model =load_model("models/resnet50.h5")
+# predicted_class , confidence = predict(BytesIO(image_data))
