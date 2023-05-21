@@ -29,7 +29,24 @@ def home():
         image_data = Binary(image.read())
         image_format = imghdr.what(None, h=image_data)
 
-        model = load_model("models/vgg16_model.h5")
+        modelName = request.args.get("model")
+        print("Model Name: ", modelName)
+
+        model = None
+        if modelName == "vgg16":
+            model = load_model("models/vgg16_model.h5")
+        elif modelName == "resnet50":
+            model = load_model("models/resnet50.h5")
+
+        if model is None:
+            return jsonify(
+                {
+                    "success": "false",
+                    "message": "Model not found",
+                }
+            )
+
+
         # Model Classes
         class_names = ["cardboard", "glass", "metal", "paper", "plastic", "trash"]
 
@@ -39,6 +56,8 @@ def home():
         img_arr = tf.expand_dims(img_arr, 0)
 
         prediction = model.predict(img_arr)
+
+        model = None
 
         predicted_class = class_names[np.argmax(prediction[0])]
         confidence = round(100 * (np.max(prediction[0])), 2)
